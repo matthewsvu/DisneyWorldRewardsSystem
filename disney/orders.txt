@@ -1,0 +1,3 @@
+CustId firstname lastname radius height ounces ounceprice sqprice
+22 3 3 3 3 3 3 3
+22245 22245 vy 2 3 4 5 6
