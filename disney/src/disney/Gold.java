@@ -2,26 +2,26 @@
  * @author: Matthew Vu
  * ID: MSV180000
  */
-package disney;
+//package disney;
 
 
 public class Gold extends Customer {
 	
 
-	   //Member variable discount
+	   // Member variable discount
 	   private double discountPercentage;
 
-	   //Default constructor
+	   // Default constructor
 	   public Gold()
 	   {
 	       super();
 	   }
 
-	   //Parameterized overloaded constructor
-	   // Constructor chaining calling parent class constructor
-	   public Gold(String firstName, String last_name, String guestID, double amountSpent, double discountPercentage)
+	   // Parameterized overloaded constructor
+	   // Constructor chaining calls parent class constructor
+	   public Gold(String guestID, String firstName, String lastName, double amountSpent, double discountPercentage)
 	   {
-	       super(firstName, last_name, guestID, amountSpent);
+	       super(guestID, firstName, lastName, amountSpent);
 	       this.discountPercentage = discountPercentage;
 	   }
 

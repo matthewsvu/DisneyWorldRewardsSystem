@@ -2,38 +2,35 @@
  * @author: Matthew Vu
  * ID: MSV180000
  */
-package disney;
+//package disney;
 
 
 public class Platinum extends Customer {
 
-	   //Member variable discount
+	   // Member variable discount
 	   private int bonusBucks;
 
-	   //Default constructor
+	   // Default constructor
 	   public Platinum()
 	   {
 	       super();
 	  
 	   }
-
-	   //Parameterized overloaded constructor
+	   // Parameterized overloaded constructor
 	   // Constructor chaining calling parent class constructor
-	   public Platinum(String firstName, String lastName, String guestID, double amountSpent, int bonusBucks)
+	   public Platinum(String guestID, String firstName, String lastName, double amountSpent, int bonusBucks)
 	   {
-	       super(firstName, lastName, guestID, amountSpent);
+	       super(guestID, firstName, lastName, amountSpent);
 	       this.bonusBucks = bonusBucks;
 	   }
-
+	   
 	   //Mutators and Accessors
 	   public double getBonusBucks()
 	   {
 	       return bonusBucks;
 	   }
-
 	   public void setBonusBucks(int bonusBucks)
 	   {
 		   this.bonusBucks = bonusBucks;
 	   }
-
 }

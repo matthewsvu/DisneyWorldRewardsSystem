@@ -3,7 +3,7 @@
  * ID: MSV180000
 */
 
-package disney;
+//package disney;
 
 
 class Customer
@@ -20,7 +20,7 @@ class Customer
 	}
 	
 	// Overloaded constructor
-	public Customer(String firstName, String lastName, String guestID, double amountSpent)
+	public Customer(String guestID, String firstName, String lastName, double amountSpent)
 	{
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -54,5 +54,3 @@ class Customer
 		this.amountSpent = amountSpent;
 	}
 }
-
-//Create the class Customer.

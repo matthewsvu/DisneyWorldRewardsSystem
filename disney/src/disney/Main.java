@@ -3,7 +3,7 @@
  * ID: MSV180000
  */
 
-package disney;
+//package disney;
 
 
 //Import packages.
@@ -11,7 +11,6 @@ import java.util.Scanner;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
@@ -35,14 +34,16 @@ public class Main
 	static final double LARGE_DRINK_DIAMETER = 5.5;
 	static final double LARGE_DRINK_HEIGHT = 7;
 	static final int LARGE_DRINK_OUNCES = 32;
-
+	
+	// formats to hundredth's and tenth's place
 	private static DecimalFormat df = new DecimalFormat("0.00");
 	private static DecimalFormat noDf = new DecimalFormat("0");
 	
 	// Arrays that all customers all stored in
 	static Customer[] regularCustomers = null;
 	static Customer[] preferredCustomers = null;
-	//Start the main() method.
+	
+	// Main method
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
 		String filename;
@@ -52,56 +53,52 @@ public class Main
 		System.out.println("Enter the regular customer file: ");
 		filename = input.next();
 		regularCustomers = readInCustomer(filename);
-		writeTestArray(regularCustomers); // testing purposes get rid of soon
 		//read file sample_preferred.dat
 		System.out.println("Enter the preferred customer file: ");
 		filename = input.next();
 		preferredCustomers = readInPreferred(filename);
-		writeTestArray(preferredCustomers); // testing purposes get rid of soon
 		// read file sample_orders.dat
 		System.out.println("Enter the orders file: ");
 		filename = input.next();
+		// process the orders and promote customers as needed
 		processOrders(filename);
 		input.close();
+		// write to the output files preferred.dat and customer.dat
 		writeCustomerOutput(regularCustomers);
 		writePreferredOutput(preferredCustomers);
-		writeTestArray(regularCustomers);
-		writeTestArray(preferredCustomers);
-		
+	}
+	public static int countLinesFile(Scanner fileInput) {
+		int numLines = 0;
+		while(fileInput.hasNextLine()) {
+			@SuppressWarnings("unused")
+			String line = fileInput.nextLine();
+			numLines++;
+		}
+		return numLines;
 	}
 	// Reads in the regular customers into an array
 	// Returns: Array of regular customers
 	public static Customer[] readInCustomer(String filename) throws FileNotFoundException {
-		int numLines = 0; // used to count num lines
-		int currCustomerNum = 0; // used to store current index of regCustomer
 		String line; // will be used to split the lines 
-		
 		Scanner fileInput = new Scanner(new FileInputStream(filename));
-		// Counts number of lines in customers
-		while(fileInput.hasNextLine()) {
-		    line = fileInput.nextLine();
-			numLines++;
-		}
+		int currCustomerNum = 0; // used to store current index of regCustomer
+		int numLines = countLinesFile(fileInput); // used to count num lines
 		fileInput.close();
+		
 		// opens the file again to read in information
 		fileInput = new Scanner(new FileInputStream(filename));
 		// create array with number of customers
 		Customer[] regularCustomer = new Customer[numLines];
-		// read in custID, firstname, lastname, and then amount spent(float)
+		// read in custID, firstname, lastname, and then amount spent (double) (in that order)
 		while(fileInput.hasNextLine()) {
 			line = fileInput.nextLine(); // gets next line
 			String[] attributes = line.split("\\s"); // splits line by whitespace
-			Customer newCustomer = new Customer(); // declare an instance of customer
 			
-			// initializes values for customer
-			newCustomer.setGuestID(attributes[0]);
-			System.out.println("This is uniqueID: " + newCustomer.getGuestID());
-			newCustomer.setFirstName(attributes[1]);
-			newCustomer.setLastName(attributes[2]);
-			newCustomer.setAmountSpent(Double.parseDouble(attributes[3]));
+			// declare an instance of customer and initializes values from attributes
+			Customer newCustomer = new Customer(attributes[0], attributes[1], attributes[2],
+					Double.parseDouble(attributes[3]));
 			regularCustomer[currCustomerNum] = newCustomer; // store it into regularCustomer
-			
-			currCustomerNum++;
+			currCustomerNum++; // increment to next customer
 		}
 		fileInput.close();
 		return regularCustomer;
@@ -109,20 +106,21 @@ public class Main
 	// reads in preferred customers into an array
 	// Returns: Array of preferred customers
 	public static Customer[] readInPreferred(String filename) throws FileNotFoundException {
-		File file = new File(filename);
-		Scanner fileInput = new Scanner(file);
-		boolean isGold = false; // checks whether to create gold object or platinum
-		int numLines = 0; // used to count num lines
-		int currPreferredNum = 0; // used to store current index of preferredCustomer
 		String line; // will be used to split the lines 
+		boolean isGold = false; // checks whether to create gold object or platinum
+		int currPreferredNum = 0; // used to store current index of preferredCustomer
 		
-		// Counts number of lines in customers
-		while(fileInput.hasNextLine()) {
-		    line = fileInput.nextLine();
-			numLines++;
+		File file = new File(filename);
+		// checks for non-existent file and returns empty array for preferred customers
+		if(!file.exists()) {
+			Customer[] preferredCustomer = {};
+			return preferredCustomer;
 		}
+		Scanner fileInput = new Scanner(file);
+		int numLines = countLinesFile(fileInput); // used to count num lines
+		
 		// if the file doesn't exists or empty return an empty array
-		if(numLines == 0 || !file.exists()) {
+		if(numLines == 0) {
 			Customer[] preferredCustomer = {};
 			fileInput.close();
 			return preferredCustomer;
@@ -131,9 +129,10 @@ public class Main
 		
 		// opens the file again to read in information
 		fileInput = new Scanner(new FileInputStream(filename));
-		// create array with number of customers
+		// create array with number of lines found
 		Customer[] preferredCustomer = new Customer[numLines];
-		// read in custID, firstname, lastname, amount spent(float), and discountPercent/Bonusbucks
+		
+		// read in custID, firstname, lastname, amount spent(float), and discountPercent/bonusBucks
 		while(fileInput.hasNextLine()) {
 			line = fileInput.nextLine(); // gets next line
 			String[] attributes = line.split("\\s"); // splits line by whitespace
@@ -142,27 +141,19 @@ public class Main
 				isGold = true;
 			}
 			if(isGold) { // create and set goldObject attributes
-				Gold newCustomer = new Gold();
-				// initializes values for Gold
-				newCustomer.setGuestID(attributes[0]);
-				newCustomer.setFirstName(attributes[1]);
-				newCustomer.setLastName(attributes[2]);
-				newCustomer.setAmountSpent(Double.parseDouble(attributes[3]));
-				// get rid of the percent sign in the discount attribute and make it a decimal num
-				newCustomer.setDiscountPercentage(Double.parseDouble(attributes[4].replace("%", "")) / 100);
+				Gold newCustomer = new Gold(
+						attributes[0],
+						attributes[1], 
+						attributes[2],
+						Double.parseDouble(attributes[3]), 
+						Double.parseDouble(attributes[4].replace("%", "")) / 100); // replaces the percent sign and makes it a double
 				
 				preferredCustomer[currPreferredNum] = newCustomer; // store it into preferredCustomer
 			}
 			else // create a platinum object and set it's attributes
 			{
-				Platinum newCustomer = new Platinum();
-				// initializes values for Platinum
-				newCustomer.setGuestID(attributes[0]);
-				newCustomer.setFirstName(attributes[1]);
-				newCustomer.setLastName(attributes[2]);
-				newCustomer.setAmountSpent(Double.parseDouble(attributes[3]));
-				newCustomer.setBonusBucks(Integer.parseInt(attributes[4]));
-				
+				Platinum newCustomer = new Platinum(attributes[0], attributes[1], attributes[2],
+						Double.parseDouble(attributes[3]), Integer.parseInt(attributes[4]));
 				preferredCustomer[currPreferredNum] = newCustomer; // store it into preferredCustomer
 			}
 			currPreferredNum++; // increment the current index
@@ -171,43 +162,49 @@ public class Main
 		fileInput.close();
 		return preferredCustomer;
 	}
+	// Main driver function that will go through each order line by and line and process them accordingly
 	public static void processOrders(String filename) {
 		try {
 			Scanner file = new Scanner(new File(filename));
 			String line;
 			double totalPrice, discountedPrice;
+			// will process orders one by one and store them into arrays
 			while(file.hasNextLine()) {
 				line = file.nextLine();
-				// 5 total orders
+		
+				// split the line into 5 orders stored within an array
 				String[] orders = line.split("\\s"); 
-				
-				Customer customer = getCustomerByID(orders[0], regularCustomers, preferredCustomers);
-				// DO LATER: Add check validity function that @returns boolean and pass in
-				// @param orders.length, (int) customer ID, orders[1], orders[2], orders[3], orders[4] 
-				if(orders.length != 5 || customer.getGuestID() == "-1" ) {
+				if(orders.length != 5) {
 					continue;
 				}
-				System.out.println("This is while loop customerID, " + customer.getGuestID());
-				
-				// orders are: size, type, costpersqrinch, and num ordered
+				// create a customer object when it finds a matching customer
+				Customer customer = getCustomerByID(orders[0], regularCustomers, preferredCustomers);
+				if(customer.getGuestID().contentEquals("-1")) { // continue loop if it doesn't find a customer
+					continue;
+				}
+				// checks if the rest of the orders are valid
+				if(!checkValid(orders[1], orders[2], orders[3], orders[4])) {
+					continue;
+				}
+				// orders are: 1 : size, 2 : type, 3 : costpersqrinch, and 4 : numordered
 				totalPrice = calculateDrinkPrice(orders[1], orders[2], Double.parseDouble(orders[3]), Integer.parseInt(orders[4]));
-				System.out.println("This is while loop total drink price, " + totalPrice);
 				discountedPrice = applyDiscount(customer, totalPrice); // first apply the discount
-				System.out.println("This is while loop discounted drink price, " + discountedPrice);
-				Customer updatedCustomer = promoteUser(customer, discountedPrice); // try to promote user after
-				if((updatedCustomer instanceof Gold) ) {
-					System.out.println("This is total drink price, " + totalPrice);
-					discountedPrice = applyDiscount(updatedCustomer, totalPrice); // apply the discount again in case there was a promotionc
-					System.out.println("This is the guestID: " + updatedCustomer.getGuestID());
-					System.out.println("This is discounted price: " + discountedPrice);
-					System.out.println("This is customer amount spent: " + updatedCustomer.getAmountSpent());
+				Customer updatedCustomer = promoteUser(customer, discountedPrice, totalPrice); // try to promote user after
+				
+				if((updatedCustomer instanceof Gold)) {
+					discountedPrice = applyDiscount(updatedCustomer, totalPrice); // apply the discount again in case there was a promotion
 					updatedCustomer.setAmountSpent(updatedCustomer.getAmountSpent() + discountedPrice); // set amountSpent to updatedPrice
-					System.out.println("This is customer amount spent after being set: " + updatedCustomer.getAmountSpent());
+				}		// in order to set the platinum object's amount spent and apply a 15% discount to the order
+						// check if the customer was previously a gold object or regular object
+				else if((updatedCustomer instanceof Platinum) && (customer instanceof Gold || 
+						(!(customer instanceof Gold) && !(customer instanceof Platinum)))) { 
+					// set the amount spent of a Platinum customer + discountedTotal
+					discountedPrice = (totalPrice - (totalPrice * 0.15));
+					updatedCustomer.setAmountSpent(updatedCustomer.getAmountSpent() + discountedPrice);
 				}
-				else if(updatedCustomer instanceof Customer) {
-					updatedCustomer.setAmountSpent(customer.getAmountSpent() + discountedPrice);
+				else { // set the amount spent of a regular customer + discountedTotal
+					updatedCustomer.setAmountSpent(updatedCustomer.getAmountSpent() + discountedPrice);
 				}
-				System.out.println("Made it to updatedCustomer");
 				// checks if the updated customer is now a preferred customer and was previously a normal Customer
 				if((updatedCustomer instanceof Gold || updatedCustomer instanceof Platinum) && 
 						!(customer instanceof Gold || customer instanceof Platinum )) {
@@ -223,13 +220,56 @@ public class Main
 			e.printStackTrace();
 		}
 	}
+	// input validation for a single order
+	public static boolean checkValid(String size, String type, String sqrInchPrice , String quantity) {
+		boolean valid = true;
+		switch(size) {
+			case "S":
+				break;
+			case "M":
+				break;
+			case "L":
+				break;
+			default:
+				valid = false;
+				break;
+		}
+		switch(type) {
+			case "soda":
+				break;
+			case "punch":
+				break;
+			case "tea":
+				break;
+			default:
+				valid = false;
+				break;
+		}
+		if(isAlpha(sqrInchPrice)) { // if one of them have alphabetical chars
+			valid = false;
+		}
+		if(isAlpha(quantity)) {
+			valid = false;
+		}
+		return valid; // return true if all of them are correct otherwise return false
+	}
+	// checks if there is alphabetical character in a string
+	public static boolean isAlpha(String name) {
+	    char[] chars = name.toCharArray();
+	    for (char c : chars) {
+	        if(Character.isLetter(c)) { // there is an alphabetical letter
+	            return true;
+	        }
+	    }
+	    return false;
+	}
 	// gets the drinkPrice through calculating with known values and orders
 	public static double calculateDrinkPrice(String drinkSize, String drinkType, double costPerSqrInch, int numOrdered) {
 		double totalPrice = 0, drinkDesign = 0, ouncesOrderedPrice = 0;
-		
+		// drinkdesign formula is the lateral surface area of a cylinder * the design cost
 		switch(drinkSize) {
 			case "S":
-				drinkDesign = (2 * Math.PI * (SMALL_DRINK_DIAMETER / 2) * SMALL_DRINK_HEIGHT * costPerSqrInch);
+				drinkDesign = ((2 * Math.PI * (SMALL_DRINK_DIAMETER / 2) * SMALL_DRINK_HEIGHT) * costPerSqrInch);
 				if(drinkType.equals("punch")) {
 					ouncesOrderedPrice = PUNCH_PRICE * SMALL_DRINK_OUNCES;
 				}
@@ -241,7 +281,7 @@ public class Main
 				}
 				break;
 			case "M":
-				drinkDesign = (2 * Math.PI * (MED_DRINK_DIAMETER / 2) * MED_DRINK_HEIGHT * costPerSqrInch);
+				drinkDesign = ((2 * Math.PI * (MED_DRINK_DIAMETER / 2) * MED_DRINK_HEIGHT) * costPerSqrInch);
 				if(drinkType.equals("punch")) {
 					ouncesOrderedPrice = PUNCH_PRICE * MED_DRINK_OUNCES;
 				}
@@ -253,7 +293,7 @@ public class Main
 				}
 				break;
 			case "L":
-				drinkDesign = (2 * Math.PI * (LARGE_DRINK_DIAMETER / 2) * LARGE_DRINK_HEIGHT * costPerSqrInch);
+				drinkDesign = ((2 * Math.PI * (LARGE_DRINK_DIAMETER / 2) * LARGE_DRINK_HEIGHT) * costPerSqrInch);
 				if(drinkType.equals("punch")) {
 					ouncesOrderedPrice = PUNCH_PRICE * LARGE_DRINK_OUNCES;
 				}
@@ -265,21 +305,21 @@ public class Main
 				}
 				break;
 		}
+		// add the design price and the price of the drink itself together. Then multiply by num ordered
 		totalPrice = (drinkDesign + ouncesOrderedPrice) * numOrdered;
 		return totalPrice;
 	}
 	// Promotes user based on the customer's amount spent and discounted total added together
 	// creates an object for gold or platinum or nothing at all depending on the total added together
-	public static Customer promoteUser(Customer customer, double addedAmount) {
-		double total = customer.getAmountSpent() + addedAmount;
+	public static Customer promoteUser(Customer customer, double discountedTotal, double totalPrice) {
+		double total = customer.getAmountSpent() + discountedTotal;
 		double discount = -1;
 		int bonusBucks = -1;
 		boolean isGold = false, isPlatinum = false;
-		System.out.println("This is total, " + total);
 		if(total < 50) {
 			return customer;
 		}
-		// We know object is gold, set its discount percentage
+		// We know object is gold, so set its discount percentage
 		if(total < 200) {
 			isGold = true;
 			if(total < 100) {
@@ -294,30 +334,27 @@ public class Main
 		}
 		else if(total >= 200) { // we know it's a platinum object now
 			isPlatinum = true;
-			bonusBucks = calculateBonusBucks(customer, addedAmount);
+			// checks if the original customer is regular customer or a gold customer 
+			if(customer instanceof Gold || (!(customer instanceof Gold) && !(customer instanceof Platinum))) {
+				discountedTotal = (totalPrice - (totalPrice * 0.15)); // apply a 15% discount if it is one of those two
+			}
+			bonusBucks = calculateBonusBucks(customer, discountedTotal);
 		}
 		// create a new updated object and cast it to different object
-		Customer updatedCustomer = null;
-		if(discount != -1 && isGold) { // create object of gold type
-			updatedCustomer = new Gold();
-			updatedCustomer.setGuestID(customer.getGuestID());
-			System.out.println("This is unique CustomerID: " + updatedCustomer.getGuestID());
-			updatedCustomer.setFirstName(customer.getFirstName());
-			updatedCustomer.setLastName(customer.getLastName());
-			updatedCustomer.setAmountSpent(customer.getAmountSpent());
-			System.out.println("This is amount spent gold: " + updatedCustomer.getAmountSpent());
-			((Gold) updatedCustomer).setDiscountPercentage(discount);
-			System.out.println("This is discountPercentage in promoteUser func, " + ((Gold) updatedCustomer).getDiscountPercentage());
+		Customer updatedCustomer = new Customer();
+		if(discount != -1 && isGold) { // create object of gold type and set it's attributes
+			updatedCustomer = new Gold(customer.getGuestID(), 
+									   customer.getFirstName(), 
+									   customer.getLastName(), 
+									   customer.getAmountSpent(), 
+									   discount);
 		}
 		else if(bonusBucks != -1 && isPlatinum) { // create object of Platinum type
-			updatedCustomer = new Platinum();
-			updatedCustomer.setGuestID(customer.getGuestID());
-			updatedCustomer.setFirstName(customer.getFirstName());
-			updatedCustomer.setLastName(customer.getLastName());
-			updatedCustomer.setAmountSpent(customer.getAmountSpent());
-			System.out.println("This is amount spent Platinum: " + updatedCustomer.getAmountSpent());
-			((Platinum) updatedCustomer).setBonusBucks(bonusBucks);
-			System.out.println("This is bonus bucks platinum: " + ((Platinum) updatedCustomer).getBonusBucks());
+			updatedCustomer = new Platinum(customer.getGuestID(), 
+										   customer.getFirstName(),
+										   customer.getLastName(), 
+										   customer.getAmountSpent(),
+										   bonusBucks);
 		}
 		return updatedCustomer;
 	}
@@ -329,19 +366,19 @@ public class Main
 		int index = indexOf(customerArray, updatedCustomer); // returns of the index of customer we want to update
 		
 		// create an array one size larger than given
-		if(add == true) {
+		if(add && resize) {
 			updatedArr = new Customer[customerArray.length + 1]; // make a temp array of size + 1 longer than the original array
 			System.arraycopy(customerArray, 0, updatedArr, 0, customerArray.length); // copy over the contents of the original array
 			updatedArr[customerArray.length] = updatedCustomer; // sets the last index as the updated customer
 		}
-		else if(add == false) { // decrease the size of the regular customers array
-			updatedArr = new Customer[customerArray.length - 1];
-			
-			System.out.println("Made it to index: " + index); // Ex: [0, 1 ,2 ,3 ,4] -> [0,1,3,4]
-			System.arraycopy(customerArray, 0, updatedArr, 0, index); // copying all elements from original array up until the object we want to delete from our array
+		else if(!add && resize) { // decrease the size of the regular customers array
+			updatedArr = new Customer[customerArray.length - 1];	
+			// Ex: [0, 1 ,2 ,3 ,4] -> [0,1,3,4]
+			System.arraycopy(customerArray, 0, updatedArr, 0, index); 
+			// copying all elements from original array up until the object we want to delete from our array
 			System.arraycopy(customerArray, index+1, updatedArr, index, customerArray.length - index - 1);
 		}
-		if(!resize && !add) { // whenever we're changing the value of a preferred customer;
+		if(!add && !resize) { // whenever we're changing the value of a preferred customer within the array;
 			updatedArr = new Customer[customerArray.length];
 			System.arraycopy(customerArray, 0, updatedArr, 0, customerArray.length); // copy over the contents of the original array
 			updatedArr[index] = updatedCustomer;
@@ -349,55 +386,54 @@ public class Main
 
 		return updatedArr;
 	}
-	// returns the index of a customer object
+	// returns the index of a customer object using a linear scan of the array
 	public static int indexOf(Customer[] arr, Customer customer) {
         // find length of array 
         int len = arr.length; 
-        System.out.println(customer.getGuestID());
-        for(int i = 0; i < len; i++) {
+        
+        for(int i = 0; i < len; i++) { // search through the array for matching ID, return the index of matching ID
         	if (arr[i].getGuestID().equals(customer.getGuestID()) ) { 
-        		System.out.println("Found matching id at: " + i + " " + arr[i].getGuestID());
                 return i; 
             } 
         }
         return -1; 
 	}
-	// applies discount to the customer
+	// applies discount to the customer based on object class
 	public static double applyDiscount(Customer customer, double totalPrice) {
 		if(customer instanceof Gold) {
-			totalPrice = totalPrice - (totalPrice * (((Gold) customer).getDiscountPercentage()));
+			totalPrice = totalPrice - (totalPrice * ((Gold) customer).getDiscountPercentage());
 		}
 		else if (customer instanceof Platinum) {
 			totalPrice = totalPrice - ((Platinum) customer).getBonusBucks();
 		}
 		return totalPrice;
 	}
-	// get bonusbucks from customer
+	// get bonusbucks from customer object
 	public static int calculateBonusBucks(Customer customer, double totalPrice) {
 		double prevAmountSpent = customer.getAmountSpent();
 		int bonusBucks = -1;
-		if(prevAmountSpent >= 200) {
+		if(prevAmountSpent >= 200) { // if it was platinum already
 			bonusBucks = (int) (((prevAmountSpent + totalPrice) - (prevAmountSpent - 
 					(prevAmountSpent % 5))) / 5);
 		}
-		else {
+		else { // if it was not a platinum object before
 			bonusBucks = (int) (((prevAmountSpent + totalPrice) - 200) / 5);
 		}
 		return bonusBucks;
 	}
-	// loops through both reg and pref customer arrays to find ID
-	public static Customer getCustomerByID(String id, Customer[] customer, Customer[] preferred) {
-		for(int i = 0; i < customer.length; i++) {
-			if(customer[i].getGuestID().contains(id)) {
-				return customer[i];
+	// loops through both reg and pref customer arrays to find ID of matching customer
+	public static Customer getCustomerByID(String id, Customer[] customerArray, Customer[] preferredArray) {
+		for(int i = 0; i < customerArray.length; i++) {
+			if(customerArray[i].getGuestID().contentEquals(id)) {
+				return customerArray[i];
 			}
 		}
-		for(int j = 0; j < preferred.length; j++) {
-			if(preferred[j].getGuestID().contains(id)) {
-				return preferred[j];
+		for(int j = 0; j < preferredArray.length; j++) {
+			if(preferredArray[j].getGuestID().contentEquals(id)) {
+				return preferredArray[j];
 			}
 		}
-		// happen when there is invalid data 
+		// happens when there is invalid data in orders file
 		Customer failedCustomer = new Customer();
 		failedCustomer.setGuestID("-1");
 		// if it reaches this point return a customer with an id of -1, check in return function for error
@@ -406,12 +442,15 @@ public class Main
 	// Write output to customer.dat
 	public static void writeCustomerOutput(Customer[] customerArray) {
 		try {
-			FileOutputStream filestream = new FileOutputStream("customer.dat");
+			File filestream = new File("customer.dat");
 			PrintWriter output = new PrintWriter(filestream);
+			
 			for(int i = 0; i < customerArray.length; i++) {
 				Customer customer = customerArray[i];
-				output.print(customer.getGuestID() + " " + customer.getFirstName() + " " + customer.getLastName() 
-				+ " " + df.format(customer.getAmountSpent()));
+				output.print(customer.getGuestID() + " " +
+							customer.getFirstName() + " " + 
+							customer.getLastName() + " " +
+							df.format(customer.getAmountSpent()));
 				output.println("");
 			}
 			output.close();
@@ -423,13 +462,16 @@ public class Main
 	// Write output to preferred.dat
 		public static void writePreferredOutput(Customer[] customerArray) {
 			try {
-				FileOutputStream filestream = new FileOutputStream("preferred.dat");
+				File filestream = new File("preferred.dat");
 				PrintWriter output = new PrintWriter(filestream);
+				
 				for(int i = 0; i < customerArray.length; i++) {
 					Customer customer = customerArray[i];
-					output.print(customer.getGuestID() + " " + customer.getFirstName() + " " + customer.getLastName() 
-					+ " " + df.format(customer.getAmountSpent()));
-					
+					output.print(customer.getGuestID() + " " + 
+							     customer.getFirstName() + " " + 
+							     customer.getLastName() + " " + 
+							     df.format(customer.getAmountSpent()));
+					// prints out either discount percentage or bonusbucks depending on object type
 					if(customer instanceof Gold) {
 						output.println(" " + ((int) (((Gold) customer).getDiscountPercentage() * 100)) + "%");
 					}
@@ -446,23 +488,4 @@ public class Main
 			}
 			
 		}
-	// just for testing purposes
-	public static void writeTestArray(Customer[] customerArray) {
-		for(int i = 0; i < customerArray.length; i++) {
-			Customer customer = customerArray[i];
-			System.out.print(customer.getGuestID() + " " + customer.getFirstName() + 
-					" " + customer.getLastName() + " " + df.format(customer.getAmountSpent()));
-			
-			if(customer instanceof Gold) {
-				// concatenate a percent sign after making the discount percentage an int again
-				System.out.println(" " + ((int) (((Gold) customer).getDiscountPercentage() * 100)) + "%");
-			}
-			else if(customer instanceof Platinum) {
-				System.out.println(" " + noDf.format(((Platinum) customer).getBonusBucks()));
-			}
-			else {
-				System.out.println("");
-			}
-		}
-	}
 }
